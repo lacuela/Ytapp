@@ -17,6 +17,8 @@ def display_commands():
     print('end')
     print('\n--------------------HELP--------------------\n')
 
+def is_valid_url(url):
+    return url.startswith("http://") or url.startswith("https://")
 
 def main():
 
@@ -26,50 +28,108 @@ def main():
 
     command = sys.argv[1]
 
-
-    if command == "info":
-
-        url = sys.argv[2]
-
-        data = converter.info(url)
-
-        print(json.dumps(data))
-
-
-    elif command == "download":
-
-        filetype = sys.argv[2]
-        url = sys.argv[3]
-        mensaje = f"Descargando {filetype} de {url}"
-
-        if filetype == "mp4":
-            result = converter.mp4download(url)
-
-        elif filetype == "mp3":
-            result = converter.mp3download(url)
-
-        else:
-            mensaje = "Tipo de archivo no válido"
+    if command == "download":
+        if len(sys.argv) < 4:
+            print(json.dumps({
+                "success": False,
+                "error": "Faltan argumentos. Uso: download <mp3/mp4> <url>"
+            }))
+            return
+        if not is_valid_url(sys.argv[3]):
+            print(json.dumps({
+                "success": False,
+                "error": "URL no válida"
+            }))
             return
 
 
-        if result is True:
-            mensaje = "Descarga completada"
-            print(json.dumps({
-                "success": True,
-                "message": mensaje
-            }))
+    if command in ["info", "playlist"]:
 
-        else:
+        if len(sys.argv) < 3:
             print(json.dumps({
                 "success": False,
-                "error": result
+                "error": "Falta la URL"
+            }))
+            return
+
+        if not is_valid_url(sys.argv[2]):
+            print(json.dumps({
+                "success": False,
+                "error": "URL no válida"
+            }))
+            return
+
+    if command == "info":
+        try:
+            url = sys.argv[2]
+
+            data = converter.info(url)
+
+            print(json.dumps(data, ensure_ascii=False))
+
+        except Exception as e:
+            print(json.dumps({
+                "success": False,
+                "error": str(e)
+            }))
+
+
+    elif command == "download":
+        try:
+            filetype = sys.argv[2]
+            url = sys.argv[3]
+
+            if filetype == "mp4":
+                result = converter.mp4download(url)
+
+            elif filetype == "mp3":
+                result = converter.mp3download(url)
+
+            else:
+                print(json.dumps({
+                    "success": False,
+                    "error": "Tipo de archivo no válido. Usa mp3 o mp4"
+                }))
+                return
+
+
+            if result is True:
+                print(json.dumps({
+                    "success": True,
+                    "data": "Descarga completada"
+                }))
+
+            else:
+                print(json.dumps({
+                    "success": False,
+                    "error": result
+                }))
+            
+        except Exception as e:
+            print(json.dumps({
+                "success": False,
+                "error": str(e)
             }))
 
     elif command == "playlist":
+
         url = sys.argv[2]
-        videos = converter.get_playlist(url)
-        print(json.dumps(videos))
+
+        try:
+            videos = converter.get_playlist(url)
+
+            print(json.dumps({
+                "success": True,
+                "data": videos, 
+                "errorData": None
+            }))
+
+        except Exception as e:
+            print(json.dumps({
+                "success": False,
+                "data": "No data available",
+                "errorData": str(e)
+            }))
 
 
     elif command == "help":
