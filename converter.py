@@ -1,59 +1,49 @@
-from pytube import YouTube, Channel
+from yt_dlp import YoutubeDL
 import re
 import os
 
-LINK_PATTERN = r"(?<=v=)[a-zA-Z0-9_-]{11}"
 
 #Function for getting MP4 progressive video files
 def mp4download(url):
-    #Create youtube object
-    yt = YouTube(url)
+    ydl_opts = {
+        "format": "bestvideo+bestaudio/best",
+        "merge_output_format": "mp4",
+        "outtmpl": "downloads/%(title)s.%(ext)s",
+    }
 
-    #Filter file and stream types
-    ytstream = yt.streams.filter(file_extension='mp4', progressive=True).get_highest_resolution()
-    
-    #Error response
-    if not ytstream:
-        print("No Progressive MP4 streams for this video.")
-        return None
-    
-    #Return downloaded file
-    filepath = ytstream.download()
+    with YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+    print("Descarga completada.")
 
 #MP3 file function
 def mp3download(url):
-    #Create youtube object
-    yt = YouTube(url)
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }],
+        "outtmpl": "downloads/%(title)s.%(ext)s",
+    }
 
-    #Filter file and stream types
-    ytstream = yt.streams.filter(only_audio=True, file_extension='mp4').get_audio_only()
+    with YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
 
-    if not ytstream:
-        print("No MP3 streams for this video")
-        return None
-    
-    #Download as MP4 file
-    mp3stream = ytstream.download()
-    mp3_file_name = mp3stream.split(".")[0] + ".mp3"
-
-    #Convert to MP3 file
-    os.rename(mp3stream, mp3_file_name)
-    print(f"Download complete. Audio saved as: {mp3_file_name}")
-    return mp3_file_name
+    print("Audio descargado.")
 
 
 #Display Video Info
 def info(url):
-    #Create Youtube object
-    yt = YouTube(url)
-    
-    #Create channel object to extract channel name
-    c = Channel(yt.channel_url)
+    with YoutubeDL({}) as ydl:
+        info = ydl.extract_info(url, download=False)
 
-    print(f"Video Title: {yt.title}")
-    print(f"Views: {yt.views}")
-    print(f"Upload Date: {yt.publish_date}")
-    print(f"Channel Name: {c.channel_name}")
+    print(f"Título: {info['title']}")
+    print(f"Canal: {info['channel']}")
+    print(f"Visualizaciones: {info['view_count']}")
+    print(f"Fecha: {info['upload_date']}")
+    print(f"Duración: {info['duration']} segundos")
 
 def display_commands():
     # Displays all possible commands and their use cases 
@@ -87,7 +77,7 @@ if __name__ == '__main__':
             else:
                 print("Invalid one word command, use the command 'help' for assistance")
                 continue
-        elif re.search(LINK_PATTERN, command_word_arr[-1]): # Checks whether a YT url has been entered
+        elif command_word_arr[-1].startswith("http"): # Checks whether a YT url has been entered
             url = command_word_arr[-1]
             if command_word_arr[0] == 'download': # Download a new yt vid
                 if command_word_arr[1].lower() == 'mp3':
