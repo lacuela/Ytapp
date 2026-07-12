@@ -5,7 +5,7 @@ import json
 def display_commands():
     print('\n--------------------HELP--------------------\n')
     print('Download mp3/mp4 file for a YT vid:')
-    print('download <filetype> <url>')
+    print('download <filetype> <url> [folder]')
     print()
     print('Display info about YT vid:')
     print('info <url>')
@@ -32,7 +32,7 @@ def main():
         if len(sys.argv) < 4:
             print(json.dumps({
                 "success": False,
-                "error": "Faltan argumentos. Uso: download <mp3/mp4> <url>"
+                "error": "Faltan argumentos. Uso: download <mp3/mp4> <url> [folder]"
             }))
             return
         if not is_valid_url(sys.argv[3]):
@@ -79,11 +79,15 @@ def main():
             filetype = sys.argv[2]
             url = sys.argv[3]
 
+            folder = None
+            if len(sys.argv) > 4:
+                folder = sys.argv[4]
+
             if filetype == "mp4":
-                result = converter.mp4download(url)
+                result = converter.mp4download(url, folder)
 
             elif filetype == "mp3":
-                result = converter.mp3download(url)
+                result = converter.mp3download(url, folder)
 
             else:
                 print(json.dumps({
@@ -120,6 +124,7 @@ def main():
 
             print(json.dumps({
                 "success": True,
+                "playlist_title": videos.get("playlist_title"),
                 "data": videos, 
                 "errorData": None
             }))
@@ -127,6 +132,7 @@ def main():
         except Exception as e:
             print(json.dumps({
                 "success": False,
+                "playlist_title": videos.get("playlist_title"),
                 "data": "No data available",
                 "errorData": str(e)
             }))

@@ -4,12 +4,21 @@ import os
 
 
 #Function for getting MP4 progressive video files
-def mp4download(url):
+def mp4download(url, folder=None):
     try:
+
+        if folder:
+            output_folder = os.path.join("downloads", folder)
+            os.makedirs(output_folder, exist_ok=True)
+            outtmpl = os.path.join(output_folder, "%(title)s.%(ext)s")
+        else:
+            os.makedirs("downloads", exist_ok=True)
+            outtmpl = os.path.join("downloads", "%(title)s.%(ext)s")
+
         ydl_opts = {
-            "format": "bestvideo+bestaudio/best",
+            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]",
             "merge_output_format": "mp4",
-            "outtmpl": "downloads/%(title)s.%(ext)s",
+            "outtmpl": outtmpl,
             "restrictfilenames": True,
             "progress_hooks": [progress_hook],
             "no_warnings": True,
@@ -21,12 +30,21 @@ def mp4download(url):
             ydl.download([url])
 
         return True
+
     except Exception as e:
         return str(e)
 
 #MP3 file function
-def mp3download(url):
+def mp3download(url, folder=None):
     try:
+        if folder:
+            output_folder = os.path.join("downloads", folder)
+            os.makedirs(output_folder, exist_ok=True)
+            outtmpl = os.path.join(output_folder, "%(title)s.%(ext)s")
+        else:
+            os.makedirs("downloads", exist_ok=True)
+            outtmpl = os.path.join("downloads", "%(title)s.%(ext)s")
+
         ydl_opts = {
             "format": "bestaudio/best",
             "postprocessors": [{
@@ -34,7 +52,7 @@ def mp3download(url):
                 "preferredcodec": "mp3",
                 "preferredquality": "192",
             }],
-            "outtmpl": "downloads/%(title)s.%(ext)s",
+            "outtmpl": outtmpl,
             "restrictfilenames": True,
             "progress_hooks": [progress_hook],
             "no_warnings": True,
@@ -78,6 +96,8 @@ def get_playlist(url):
     }) as ydl:
 
         data = ydl.extract_info(url, download=False)
+        playlist_title = data.get("title", "Playlist")
+        playlist_title = re.sub(r'[<>:"/\\|?*]', "_", playlist_title)
 
     videos = []
 
@@ -91,7 +111,10 @@ def get_playlist(url):
             "url": video_url
         })
 
-    return videos
+    return {
+        "playlist_title": playlist_title,
+        "videos": videos
+    }
 
 def progress_hook(data):
     pass
