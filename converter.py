@@ -23,7 +23,8 @@ def mp4download(url, folder=None):
             "progress_hooks": [progress_hook],
             "no_warnings": True,
             "quiet": True,
-            "noprogress": True
+            "noprogress": True,
+            "ignoreerrors": True
         }
 
         with YoutubeDL(ydl_opts) as ydl:
@@ -47,17 +48,26 @@ def mp3download(url, folder=None):
 
         ydl_opts = {
             "format": "bestaudio/best",
+            "writethumbnail": True,
             "postprocessors": [{
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "mp3",
                 "preferredquality": "192",
+            },
+            {
+                "key": "FFmpegMetadata",
+            },
+            {
+                "key": "EmbedThumbnail",
             }],
             "outtmpl": outtmpl,
             "restrictfilenames": True,
             "progress_hooks": [progress_hook],
             "no_warnings": True,
             "quiet": True,
-            "noprogress": True
+            "noprogress": True,
+            "ignoreerrors": True,
+            "embed_metadata": True
         }
 
         with YoutubeDL(ydl_opts) as ydl:

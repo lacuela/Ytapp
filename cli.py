@@ -125,7 +125,7 @@ def main():
             print(json.dumps({
                 "success": True,
                 "playlist_title": videos.get("playlist_title"),
-                "data": videos, 
+                "data": videos["videos"], 
                 "errorData": None
             }))
 
